@@ -1,6 +1,7 @@
 package com.study.jettip
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
@@ -14,6 +15,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddBox
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.rounded.Money
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +33,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.study.jettip.components.CircleButton
 import com.study.jettip.components.InputField
 import com.study.jettip.ui.theme.JetTipTheme
 
@@ -88,16 +93,38 @@ fun CreateTotalPerPersonBox(totalPerPerson: Double = 10.0) {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
-@Preview
+//@Preview
 @Composable
 fun CreateOptionsBox () {
+    BillForm() { bill ->
+        Log.d("AMOUNT", "CreateOptionsBox: $bill")
+    }
+
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) {
+
     val bill = remember {
         mutableStateOf("0")
     }
 
+    val splitNumber = remember {
+        mutableStateOf(1)
+    }
+
+    val tipValue = remember {
+        mutableStateOf(10f)
+    }
+
     val validState = remember(bill.value) {
         bill.value.trim().isNotEmpty()
+    }
+
+    var range by remember { mutableStateOf(0f) }
+    var percentage by remember {
+        mutableStateOf(0)
     }
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -116,12 +143,61 @@ fun CreateOptionsBox () {
             .height(300.dp)
             .padding(10.dp)
         ) {
-            InputField(valueState = bill, labelId = "Enter Bill", onAction = KeyboardActions {
-                if (!validState) return@KeyboardActions
-                //Todo - onvaluechanged
-                keyboardController?.hide()
-            }, icon = Icons.Rounded.Money)
+            Column {
+                InputField(valueState = bill, labelId = "Enter Bill", onAction = KeyboardActions {
+                    if (!validState) return@KeyboardActions
+                    onValChange(bill.value.trim())
+
+                    keyboardController?.hide()
+                }, icon = Icons.Rounded.Money)
+                SplitController(splitNumber) {
+                    if (splitNumber.value == 1 && it == -1) {
+                        return@SplitController
+                    }
+                    splitNumber.value += it
+                }
+                DisplayTip(valueState = tipValue)
+                PercentageSelector(range = range, percentage = percentage) {
+                    range = it
+                    percentage = (range * 100).toInt()
+                }
+            }
         }
+    }
+}
+
+@Composable
+fun SplitController(valueState: MutableState<Int>, updateValue: (Int) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 20.dp, bottom = 20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+
+    ) {
+        Text(text = "Split")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            CircleButton(icon = Icons.Default.Remove) {
+                updateValue(-1)
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(text = "${valueState.value}")
+            Spacer(modifier = Modifier.width(10.dp))
+            CircleButton(icon = Icons.Default.Add) {
+                updateValue(1)
+            }
+        }
+    }
+}
+
+@Composable
+fun DisplayTip(valueState: MutableState<Float>) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = "Tip")
+        Text(text = "$${valueState.value}")
     }
 }
 
@@ -133,5 +209,18 @@ fun DefaultPreview() {
             CreateTotalPerPersonBox()
             CreateOptionsBox()
         }
+    }
+}
+
+@Composable
+fun PercentageSelector(range: Float, percentage: Int, onValChange: (Float) -> Unit) {
+    
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Spacer(modifier = Modifier.height(10.dp))
+        Text("$percentage %")
+        Spacer(modifier = Modifier.height(10.dp))
+        Slider(value = range, onValueChange = {
+            onValChange(it)
+        })
     }
 }
