@@ -35,10 +35,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyApp {
+                val totalTipAmount = remember {
+                    mutableStateOf(0f)
+                }
                 // A surface container using the 'background' color from the theme
                 Column {
-                    CreateTotalPerPersonBox()
-                    CreateOptionsBox()
+                    CreateTotalPerPersonBox(totalPerPerson = totalTipAmount.value)
+                    CreateOptionsBox(totalTipAmount = totalTipAmount)
                 }
             }
         }
@@ -60,7 +63,7 @@ fun MyApp(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun CreateTotalPerPersonBox(totalPerPerson: Double = 10.0) {
+fun CreateTotalPerPersonBox(totalPerPerson: Float = 10f) {
     Box(modifier = Modifier
         .fillMaxWidth()
         .height(150.dp)
@@ -88,8 +91,8 @@ fun CreateTotalPerPersonBox(totalPerPerson: Double = 10.0) {
 
 //@Preview
 @Composable
-fun CreateOptionsBox () {
-    BillForm() { bill ->
+fun CreateOptionsBox (totalTipAmount: MutableState<Float>) {
+    BillForm(totalTipAmount = totalTipAmount) { bill ->
         Log.d("AMOUNT", "CreateOptionsBox: $bill")
     }
 
@@ -97,7 +100,7 @@ fun CreateOptionsBox () {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) {
+fun BillForm(modifier: Modifier = Modifier, totalTipAmount: MutableState<Float>, onValChange: (String) -> Unit = {}) {
 
     val bill = remember {
         mutableStateOf("")
@@ -108,7 +111,7 @@ fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) 
     }
 
     val tipValue = remember {
-        mutableStateOf(10f)
+        mutableStateOf(0f)
     }
 
     val validState = remember(bill.value) {
@@ -155,6 +158,9 @@ fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) 
                 DisplayTip(valueState = tipValue)
                 PercentageSelector(range = range, percentage = percentage) {
                     range = it
+                    val totalBill = bill.value.toFloat()
+                    totalTipAmount.value = calculateTotalPerPerson(totalBill = totalBill, percentage = range, split = splitNumber.value)
+                    tipValue.value = calculateTotalTip(totalBill = totalBill, percentage = range)
                 }
 //                }
             }
@@ -193,18 +199,7 @@ fun DisplayTip(valueState: MutableState<Float>) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = "Tip")
-        Text(text = "$${valueState.value}")
-    }
-}
-
-//@Preview
-@Composable
-fun DefaultPreview() {
-    MyApp {
-        Column {
-            CreateTotalPerPersonBox()
-            CreateOptionsBox()
-        }
+        Text(text = "$${"%.2f".format(valueState.value)}")
     }
 }
 
@@ -222,3 +217,6 @@ fun PercentageSelector(range: Float, percentage: Int, onValChange: (Float) -> Un
         }, steps = 5)
     }
 }
+
+fun calculateTotalPerPerson(totalBill: Float, percentage: Float, split: Int) = (totalBill * ( 1 + percentage )) / split
+fun calculateTotalTip(totalBill: Float, percentage: Float) =  totalBill * percentage
