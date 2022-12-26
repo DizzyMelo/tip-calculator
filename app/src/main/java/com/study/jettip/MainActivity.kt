@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.study.jettip.components.CircleButton
+import com.study.jettip.components.RoundIconButton
 import com.study.jettip.components.InputField
 import com.study.jettip.ui.theme.JetTipTheme
 
@@ -100,7 +100,7 @@ fun CreateOptionsBox () {
 fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) {
 
     val bill = remember {
-        mutableStateOf("0")
+        mutableStateOf("")
     }
 
     val splitNumber = remember {
@@ -116,9 +116,7 @@ fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) 
     }
 
     var range by remember { mutableStateOf(0f) }
-    var percentage by remember {
-        mutableStateOf(0)
-    }
+    val percentage = (range * 100).toInt()
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -137,12 +135,17 @@ fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) 
             .padding(10.dp)
         ) {
             Column {
-                InputField(valueState = bill, labelId = "Enter Bill", onAction = KeyboardActions {
-                    if (!validState) return@KeyboardActions
-                    onValChange(bill.value.trim())
-
-                    keyboardController?.hide()
-                }, icon = Icons.Rounded.Money)
+                InputField(
+                    valueState = bill,
+                    labelId = "Enter Bill",
+                    onAction = KeyboardActions {
+                        if (!validState) return@KeyboardActions
+                        onValChange(bill.value.trim())
+                        keyboardController?.hide()
+                    },
+                    icon = Icons.Rounded.Money
+                )
+//                if (validState) {
                 SplitController(splitNumber) {
                     if (splitNumber.value == 1 && it == -1) {
                         return@SplitController
@@ -152,8 +155,8 @@ fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) 
                 DisplayTip(valueState = tipValue)
                 PercentageSelector(range = range, percentage = percentage) {
                     range = it
-                    percentage = (range * 100).toInt()
                 }
+//                }
             }
         }
     }
@@ -170,13 +173,13 @@ fun SplitController(valueState: MutableState<Int>, updateValue: (Int) -> Unit) {
     ) {
         Text(text = "Split")
         Row(verticalAlignment = Alignment.CenterVertically) {
-            CircleButton(icon = Icons.Default.Remove) {
+            RoundIconButton(imageVector = Icons.Default.Remove) {
                 updateValue(-1)
             }
             Spacer(modifier = Modifier.width(10.dp))
             Text(text = "${valueState.value}")
             Spacer(modifier = Modifier.width(10.dp))
-            CircleButton(icon = Icons.Default.Add) {
+            RoundIconButton(imageVector = Icons.Default.Add) {
                 updateValue(1)
             }
         }
@@ -212,8 +215,10 @@ fun PercentageSelector(range: Float, percentage: Int, onValChange: (Float) -> Un
         Spacer(modifier = Modifier.height(10.dp))
         Text("$percentage %")
         Spacer(modifier = Modifier.height(10.dp))
-        Slider(value = range, onValueChange = {
+        Slider(
+            value = range,
+            onValueChange = {
             onValChange(it)
-        })
+        }, steps = 5)
     }
 }

@@ -8,8 +8,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AttachMoney
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -21,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -55,24 +54,29 @@ fun InputField(
     )
 }
 
+val IconButtonSizeModifier = Modifier.size(40.dp)
 @Composable
-fun CircleButton(icon: ImageVector, onClick: () -> Unit) {
-    Surface(
-        modifier = Modifier
+fun RoundIconButton(
+    modifier: Modifier = Modifier,
+    imageVector: ImageVector,
+    tint: Color = Color.Black.copy(alpha = 0.8f),
+    backgroundColor: Color = MaterialTheme.colors.onBackground,
+    elevation: Dp = 8.dp,
+    onClick: () -> Unit) {
+    Card(
+        modifier = modifier
             .height(30.dp)
             .width(30.dp)
             .clip(shape = CircleShape)
-            .clickable {
-                onClick()
-            },
-        color = Color.LightGray,
-        elevation = 5.dp,
+            .clickable { onClick.invoke() }.then(IconButtonSizeModifier)
+            .background(color = backgroundColor),
+        elevation = elevation,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Icon(imageVector = icon, contentDescription = "Action Icon")
+            Icon(imageVector = imageVector, contentDescription = "Action Icon", tint = tint)
         }
     }
 }
